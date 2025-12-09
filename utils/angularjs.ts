@@ -65,3 +65,16 @@ export function updateElement(element, props = {}, hooks) {
 
   return element;
 }
+
+export function destroyElement(element: HTMLElement) {
+  const injector = angular.element(element).injector();
+
+  if (!injector) {
+    throw new Error('Already destroyed')
+  }
+
+  const $rootScope = injector.get('$rootScope');
+
+  // Destroy all scopes
+  $rootScope.$destroy();
+}

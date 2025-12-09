@@ -1,12 +1,14 @@
 //@ts-expect-error
 import angular from "angular";
 
-//@ts-expect-error
 import { makeDecorator } from "@storybook/addons";
 
-import { buildElement, updateElement } from "./utils/angularjs";
+import { buildElement, updateElement, destroyElement } from "./utils/angularjs";
 
-const cache = {};
+let cache: {
+  template: string,
+  element: HTMLDivElement,
+} | null = null;
 
 interface StorybookAddonAngularJs {
   modules: string[]
@@ -29,26 +31,29 @@ export default makeDecorator({
 
     const currentPhase = context.hooks.currentPhase;
 
-    const rebuild = "always";
+    console.log("withAngularJs", currentPhase, context.hooks);
 
     const hooks = {};
 
-    if (
-      rebuild === "always" ||
-      (rebuild === "mount" && currentPhase === "MOUNT") ||
-      (rebuild === "update" && currentPhase === "UPDATE") ||
-      !cache[key] ||
-      cache[key].template !== template
-    ) {
+    if (currentPhase === "MOUNT") {
+      if (cache) {
+        console.log("withAngularJs", "Destroy")
+        destroyElement(cache.element);
+        angular.element(cache.element).remove();
+        cache = null
+      }
+
+      console.log("withAngularJs", "Build")
       const element = document.createElement("div");
 
       angular.bootstrap(element, storyOptions.modules);
 
-      cache[key] = { template, element };
+      cache = { template, element };
 
-      return buildElement(cache[key].element, template, args, hooks);
+      return buildElement(cache.element, template, args, hooks);
+    } else if (currentPhase === "UPDATE" && cache) {
+      console.log("withAngularJs", "Update")
+      return updateElement(cache.element, args, hooks);
     }
-
-    return updateElement(cache[key].element, args, hooks);
   },
 }) as (options: StorybookAddonAngularJs) => any;
