@@ -31,19 +31,15 @@ export default makeDecorator({
 
     const currentPhase = context.hooks.currentPhase;
 
-    console.log("withAngularJs", currentPhase, context.hooks);
-
     const hooks = {};
 
     if (currentPhase === "MOUNT") {
       if (cache) {
-        console.log("withAngularJs", "Destroy")
         destroyElement(cache.element);
         angular.element(cache.element).remove();
         cache = null
       }
 
-      console.log("withAngularJs", "Build")
       const element = document.createElement("div");
 
       angular.bootstrap(element, storyOptions.modules);
@@ -52,7 +48,6 @@ export default makeDecorator({
 
       return buildElement(cache.element, template, args, hooks);
     } else if (currentPhase === "UPDATE" && cache) {
-      console.log("withAngularJs", "Update")
       return updateElement(cache.element, args, hooks);
     }
   },
